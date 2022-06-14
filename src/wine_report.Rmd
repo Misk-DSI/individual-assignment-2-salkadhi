@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-here()
+# wine <- read_csv(here('data/winequality-red-kaggle.csv'))
 ```
 
 
