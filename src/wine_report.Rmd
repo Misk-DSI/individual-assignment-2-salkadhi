@@ -1,46 +1,90 @@
 ---
+title: "Wine Dataset EDA"
+author: "Sultan Alkadhi"
+date: "`r Sys.Date()`"
+output: html_document
 knit: (function(input, ...) {
     rmarkdown::render(
       input,
       output_dir = "../"
     )
   })
-title: "Wine Dataset EDA"
-author: "Sultan Alkadhi"
-date: "`r Sys.Date()`"
-output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+# Introduction
+In this R Markdown document, I provide an analysis of the red wine dataset from *kaggle*. The wine variety is "Vinho Verde" from Portugal. The dataset describes physiochemical properties of the wine samples taken at the certification stage plus an expert assessment of quality.
+
+# Data
+
+```{r include=FALSE}
+wine <- read_csv(here::here('data/winequality-red.csv'))
 ```
 
 ```{r}
-# wine <- read_csv(here('data/winequality-red-kaggle.csv'))
+#Load "tidyverse" then read as csv and assign to wine object.
+names(wine)
 ```
 
-
-
-# Data 
-Include a static markdown table describing the name of each variable and what it is.
-#EDA
-Include appropriate data visualizations from your EDA and text explaining what you observed.
-#Conclusion
-Include a short text describing your overall insights drawn from examining the data.
-
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+#Cleaning column names
+wine <- janitor::clean_names(wine) #replace spaces with "_"
+colnames(wine)[colnames(wine) == 'p_h'] <- "ph" #change p_h to ph
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+#Inspecting variables
+(missing_values <- sum(is.na(wine))) #Check for missing values.
+glimpse(wine)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+There are 1,599 entries in the dataset with 12 variables including quality. All variable types are double. Quality assessments are given as whole numbers. 
+
+```{r}
+#Examine spread and central tendency
+dlookr::describe(wine) %>%
+    select(described_variables, mean, sd, se_mean, skewness, kurtosis, IQR ,p00, p50, p100) %>% 
+  mutate_if(is.numeric, ~round(.,2)) %>%
+  gt::gt()
+```
+
+Skewness is a measure of the symmetry in a distribution.  A symmetrical dataset will have a skewness equal to 0.  So, a normal distribution will have a skewness of 0.   Skewness essentially measures the relative size of the two tails. Kurtosis is defined as the standardized fourth central moment of a distribution minus 3 (to make the kurtosis of the normal distribution equal to zero). 
+
+```{r}
+#Test corrletaions between all variables
+ggstatsplot::ggcorrmat(data = wine, type = "np", output = "dataframe") %>%
+    select("parameter1", "parameter2", "estimate", "conf.low", "conf.high", "p.value") %>%
+  mutate_if(is.numeric, ~round(.,2)) %>% 
+  DT::datatable()
+```
+
+Applied Spearman correlation at 95% confidence level. The Spearman correlation coefficient, rs, can take values from +1 to -1. A rs of +1 indicates a perfect association of ranks, a rs of zero indicates no association between ranks and a rs of -1 indicates a perfect negative association of ranks. The closer rs is to zero, the weaker the association between the ranks. Between 0.4 and 0.6 is moderate. If you click on the "estimate" in the interactive table, you will see a strong association between "fixed acidity", "pH", "citric acid", and "volatile acidity". Which is non-revealing. Intersetingly, one of the stronger correlations is quality and alcohol concentration. All p-values suggest there is a less than 95% chance the estimate is random.
+
+# EDA
+```{r out.width = '100%'}
+#Visualize distribution and tail symmetry.
+wine %>%
+  DataExplorer::plot_density()
+```
+
+```{r}
+#Visualize correlations
+ggstatsplot::ggcorrmat(data = wine, type = "nonparameteric", title = "Correlation matrix plot", k = 1L )
+```
+
+```{r}
+#Drill down into alcohol vs quality
+sm::sm.density.compare(wine$alcohol, wine$quality, xlab="Alcohol Content")
+title("Wine Density Comparison Plot")
+quality_legend = factor(wine$quality, labels=c("3","4","5","6","7","8"))
+colfill <- c(2:(2+length(levels(quality_legend))))
+legend("topright", levels(quality_legend), fill=colfill, title = "Quality")
+```
+
+# Conclusion
+
+
+
