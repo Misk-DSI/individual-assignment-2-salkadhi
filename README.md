@@ -4,5 +4,5 @@ Go the the gh-pages branch of this repo ('Misk-DSI/individual-assignment-2-salka
 
 
  
-[Misk-DSI.github.io/individual-assignment-2-salkadhi/](https:Misk-DSI.github.io/individual-assignment-2-salkadhi/)
+[Misk-DSI.github.io/individual-assignment-2-salkadhi/](https://Misk-DSI.github.io/individual-assignment-2-salkadhi/)
 
