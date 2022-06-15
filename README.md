@@ -5,5 +5,5 @@ Go the the gh-pages branch of this repo ('Misk-DSI/individual-assignment-2-salka
 
  
 [scavetta.github.io/gh-pages-example/](https://scavetta.github.io/gh-pages-example/)
-
+[Misk-DSI.github.io/individual-assignment-2-salkadhi/](https:Misk-DSI.github.io/individual-assignment-2-salkadhi/)
 
