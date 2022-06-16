@@ -13,45 +13,64 @@ knit: (function(input, ...) {
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
 ```
-# Introduction
-In this R Markdown document, I provide an analysis of the red wine dataset from *kaggle*. The wine variety is "Vinho Verde" from Portugal. The dataset describes physiochemical properties of the wine samples taken at the certification stage plus an expert assessment of quality.
+
+$~$
+
+In this R Markdown document, I provide an exploratory analysis of the red wine dataset from *kaggle*. The wine variety is "Vinho Verde" from Portugal. The dataset describes physiochemical properties of the wine samples taken at the certification stage plus an expert assessment of quality.
+
+$~$
 
 # Data
 
+
+Import the tidyverse package. Read the csv file as a tibble and assign it to the wine object.
+
+
 ```{r include=FALSE}
+here::here()
+```
+
+```{r include=FALSE}
+library(tidyverse)
 wine <- read_csv(here::here('data/winequality-red.csv'))
 ```
 
 ```{r}
-#Load "tidyverse" then read as csv and assign to wine object.
+#Check the variable names
 names(wine)
 ```
 
+
 ```{r}
-#Cleaning column names
+#Clean the variable names
 wine <- janitor::clean_names(wine) #replace spaces with "_"
 colnames(wine)[colnames(wine) == 'p_h'] <- "ph" #change p_h to ph
 ```
 
+
 ```{r}
-#Inspecting variables
-(missing_values <- sum(is.na(wine))) #Check for missing values.
+#Check for missing values
+sum(is.na(wine))
+#Explore the data
 glimpse(wine)
 ```
 
+
 There are 1,599 entries in the dataset with 12 variables including quality. All variable types are double. Quality assessments are given as whole numbers. 
 
+
 ```{r}
-#Examine spread and central tendency
+#Examine dispersion and central tendency
 dlookr::describe(wine) %>%
     select(described_variables, mean, sd, se_mean, skewness, kurtosis, IQR ,p00, p50, p100) %>% 
   mutate_if(is.numeric, ~round(.,2)) %>%
   gt::gt()
 ```
 
-Skewness is a measure of the symmetry in a distribution.  A symmetrical dataset will have a skewness equal to 0.  So, a normal distribution will have a skewness of 0.   Skewness essentially measures the relative size of the two tails. Kurtosis is defined as the standardized fourth central moment of a distribution minus 3 (to make the kurtosis of the normal distribution equal to zero). 
+
+The variables "sulphates", "chlorides", and "residual sugar" have high skewness as well as kurtosis suggesting heavy-tailed, positively skewed distributions. The "density" and "pH" variables appear the most normally distributed with the mean equaling the median (p50). The low standard error of the mean (se_mean) for all variables indicates closeness to the true population means.
+
 
 ```{r}
 #Test corrletaions between all variables
@@ -61,7 +80,10 @@ ggstatsplot::ggcorrmat(data = wine, type = "np", output = "dataframe") %>%
   DT::datatable()
 ```
 
-Applied Spearman correlation at 95% confidence level. The Spearman correlation coefficient, rs, can take values from +1 to -1. A rs of +1 indicates a perfect association of ranks, a rs of zero indicates no association between ranks and a rs of -1 indicates a perfect negative association of ranks. The closer rs is to zero, the weaker the association between the ranks. Between 0.4 and 0.6 is moderate. If you click on the "estimate" in the interactive table, you will see a strong association between "fixed acidity", "pH", "citric acid", and "volatile acidity". Which is non-revealing. Intersetingly, one of the stronger correlations is quality and alcohol concentration. All p-values suggest there is a less than 95% chance the estimate is random.
+
+Since we can't assume normality I used the non-parametric Spearman correlation coefficient. The given estimates are reported with 95% confidence intervals. If you click on the “estimate” in the interactive table, you will see a strong association between “fixed acidity”, “pH”, “citric acid”, and “volatile acidity”, which is non-revealing. Below those is a positive 0.48 correlation, which is of "quality" and "alcohol." 
+
+$~$
 
 # EDA
 ```{r out.width = '100%'}
@@ -70,10 +92,19 @@ wine %>%
   DataExplorer::plot_density()
 ```
 
+
+This graph complements the first static table. It visually highlights the expected bell-shaped the distributions of "density" and "pH". All other graphs except quality seem to have a positive skew in some form (i.e, longer right tails). Wine quality appears bimodal, however, that is  because the data are discrete and most quality estimates in the dataset are exactly 5 or 6.
+
+
 ```{r}
 #Visualize correlations
 ggstatsplot::ggcorrmat(data = wine, type = "nonparameteric", title = "Correlation matrix plot", k = 1L )
 ```
+
+
+This graph complements the interactive table above. Low pH describes highly acidic solutions so we should expect a negative correlation between "pH" and both "fixed acidity" and "citric acid." The variable most positively correlated with "quality" after alcohol concentration is "sulphates". There is a non-surprising moderate correlation between "density" and both of "residual sugar" and "chlorides."
+
+
 
 ```{r}
 #Drill down into alcohol vs quality
@@ -84,7 +115,16 @@ colfill <- c(2:(2+length(levels(quality_legend))))
 legend("topright", levels(quality_legend), fill=colfill, title = "Quality")
 ```
 
+
+Wines of the highest quality (7 and 8) are on the rightmost side of the graph but their dispersion is quite large, and the dataset did not have as many of these values as 5 and 6, which appear on the middle to the left side of the graph. The peaks of qualities 3 and 4, are both on the left side, however. 
+
+$~$
+
 # Conclusion
 
+
+Based on preliminary analysis of the large wine dataset, I could not reach any immediate conclusions. I speculate wines are rarely assessed to be of quality 7 or 8 so it was hard to present a clear relationship between increased quality with alcohol concentration. Machine learning algorithms could provide some insight here as this dataset is tidy, comprehensive, and appears to reflect the real world "population" of the of the "Vinho Verde" wine. 
+
+$~$
 
 
