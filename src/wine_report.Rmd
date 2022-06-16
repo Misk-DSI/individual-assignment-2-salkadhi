@@ -1,46 +1,131 @@
 ---
+title: "Wine Dataset EDA"
+author: "Sultan Alkadhi"
+date: "`r Sys.Date()`"
+output: html_document
 knit: (function(input, ...) {
     rmarkdown::render(
       input,
       output_dir = "../"
     )
   })
-title: "Wine Dataset EDA"
-author: "Sultan Alkadhi"
-date: "`r Sys.Date()`"
-output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+$~$
+
+In this R Markdown document, I provide an exploratory analysis of the red wine dataset from *kaggle*. The wine variety is "Vinho Verde" from Portugal. The dataset describes physiochemical properties of the wine samples taken at the certification stage plus an expert assessment of quality.
+
+$~$
+
+# Data
+
+
+Import the tidyverse package. Read the csv file as a tibble and assign it to the wine object.
+
+
+```{r include=FALSE}
+here::here()
+```
+
+```{r include=FALSE}
+library(tidyverse)
+wine <- read_csv(here::here('data/winequality-red.csv'))
+```
+
 ```{r}
-here()
+#Check the variable names
+names(wine)
 ```
 
 
-
-# Data 
-Include a static markdown table describing the name of each variable and what it is.
-#EDA
-Include appropriate data visualizations from your EDA and text explaining what you observed.
-#Conclusion
-Include a short text describing your overall insights drawn from examining the data.
-
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+#Clean the variable names
+wine <- janitor::clean_names(wine) #replace spaces with "_"
+colnames(wine)[colnames(wine) == 'p_h'] <- "ph" #change p_h to ph
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+#Check for missing values
+sum(is.na(wine))
+#Explore the data
+glimpse(wine)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+There are 1,599 entries in the dataset with 12 variables including quality. All variable types are double. Quality assessments are given as whole numbers. 
+
+
+```{r}
+#Examine dispersion and central tendency
+dlookr::describe(wine) %>%
+    select(described_variables, mean, sd, se_mean, skewness, kurtosis, IQR ,p00, p50, p100) %>% 
+  mutate_if(is.numeric, ~round(.,2)) %>%
+  gt::gt()
+```
+
+
+The variables "sulphates", "chlorides", and "residual sugar" have high skewness as well as kurtosis suggesting heavy-tailed, positively skewed distributions. The "density" and "pH" variables appear the most normally distributed with the mean equaling the median (p50). The low standard error of the mean (se_mean) for all variables indicates closeness to the true population means.
+
+
+```{r}
+#Test corrletaions between all variables
+ggstatsplot::ggcorrmat(data = wine, type = "np", output = "dataframe") %>%
+    select("parameter1", "parameter2", "estimate", "conf.low", "conf.high", "p.value") %>%
+  mutate_if(is.numeric, ~round(.,2)) %>% 
+  DT::datatable()
+```
+
+
+Since we can't assume normality I used the non-parametric Spearman correlation coefficient. The given estimates are reported with 95% confidence intervals. If you click on the “estimate” in the interactive table, you will see a strong association between “fixed acidity”, “pH”, “citric acid”, and “volatile acidity”, which is non-revealing. Below those is a positive 0.48 correlation, which is of "quality" and "alcohol." 
+
+$~$
+
+# EDA
+```{r out.width = '100%'}
+#Visualize distribution and tail symmetry.
+wine %>%
+  DataExplorer::plot_density()
+```
+
+
+This graph complements the first static table. It visually highlights the expected bell-shaped the distributions of "density" and "pH". All other graphs except quality seem to have a positive skew in some form (i.e, longer right tails). Wine quality appears bimodal, however, that is  because the data are discrete and most quality estimates in the dataset are exactly 5 or 6.
+
+
+```{r}
+#Visualize correlations
+ggstatsplot::ggcorrmat(data = wine, type = "nonparameteric", title = "Correlation matrix plot", k = 1L )
+```
+
+
+This graph complements the interactive table above. Low pH describes highly acidic solutions so we should expect a negative correlation between "pH" and both "fixed acidity" and "citric acid." The variable most positively correlated with "quality" after alcohol concentration is "sulphates". There is a non-surprising moderate correlation between "density" and both of "residual sugar" and "chlorides."
+
+
+
+```{r}
+#Drill down into alcohol vs quality
+sm::sm.density.compare(wine$alcohol, wine$quality, xlab="Alcohol Content")
+title("Wine Density Comparison Plot")
+quality_legend = factor(wine$quality, labels=c("3","4","5","6","7","8"))
+colfill <- c(2:(2+length(levels(quality_legend))))
+legend("topright", levels(quality_legend), fill=colfill, title = "Quality")
+```
+
+
+Wines of the highest quality (7 and 8) are on the rightmost side of the graph but their dispersion is quite large, and the dataset did not have as many of these values as 5 and 6, which appear on the middle to the left side of the graph. The peaks of qualities 3 and 4, are both on the left side, however. 
+
+$~$
+
+# Conclusion
+
+
+Based on preliminary analysis of the large wine dataset, I could not reach any immediate conclusions. I speculate wines are rarely assessed to be of quality 7 or 8 so it was hard to present a clear relationship between increased quality with alcohol concentration. Machine learning algorithms could provide some insight here as this dataset is tidy, comprehensive, and appears to reflect the real world "population" of the of the "Vinho Verde" wine. 
+
+
+$~$
+
+
