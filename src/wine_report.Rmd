@@ -125,6 +125,7 @@ $~$
 
 Based on preliminary analysis of the large wine dataset, I could not reach any immediate conclusions. I speculate wines are rarely assessed to be of quality 7 or 8 so it was hard to present a clear relationship between increased quality with alcohol concentration. Machine learning algorithms could provide some insight here as this dataset is tidy, comprehensive, and appears to reflect the real world "population" of the of the "Vinho Verde" wine. 
 
+
 $~$
 
 
