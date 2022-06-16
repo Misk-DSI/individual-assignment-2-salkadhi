@@ -1,4 +1,4 @@
-# Red Wine Dataset Analysis
+# Red Wine Dataset EDA
 
 This site contains an R Markdown exploratory analysis of the Kaggle red wine dataset. The wine variety is “Vinho Verde” from Portugal. The dataset describes physiochemical properties of the wine samples taken at the certification stage plus an expert assessment of quality.
 
