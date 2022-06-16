@@ -1,6 +1,6 @@
 # Red Wine Dataset Analysis
 
-This site contains an R Markdown analysis of the Kaggle red wine dataset.
+This site contains an R Markdown exploratory analysis of the Kaggle red wine dataset.
 
 - [R Markdown File](./wine_report.html)
 
